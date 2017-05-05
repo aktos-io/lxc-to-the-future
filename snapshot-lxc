@@ -1,0 +1,123 @@
+#!/bin/bash 
+
+
+if [[ "$(whoami)" != "root" ]]; then 
+	echo "This script needs root privileges."
+	sudo $0 $*
+	exit 
+fi 
+
+START_TIME=$SECONDS
+
+SUBVOL=$1
+NAME=$2
+
+DIR="/var/lib/lxc"
+
+if [[ "$SUBVOL" == "" || "$NAME" == "" ]]; then 
+	cat <<ERR
+
+usage: 
+
+	$0 /path/to/subvolume your-container-name
+
+in order to delete a LXC container, run 
+
+	$0 delete your-container-name
+
+ERR
+	exit 
+fi
+
+if [[ "$SUBVOL" == "delete" ]]; then 
+	read -p "Press enter to delete LXC container: $NAME"
+	btrfs sub delete $DIR/$NAME/rootfs 
+	rm -r $DIR/$NAME
+	exit
+fi
+
+# setup a bridge interface
+
+if [[ "$(grep br0 /etc/network/interfaces)" == "" ]]; then 
+	cat <<ONETIME
+
+ERROR: No br0 bridge device found in  /etc/network/interfaces file. 
+
+Edit your /etc/network/interfaces file and add/replace the following section 
+in place of "eth0" section 
+
+	configure
+	auto br0
+	iface br0 inet dhcp
+		bridge-ifaces eth0
+		bridge-ports eth0
+		up ifconfig eth0 up
+		
+
+Then run the following: 
+
+	sudo ifup br0
+
+ONETIME
+	exit
+fi
+
+echo "creating the container directory: $NAME"
+mkdir $DIR/$NAME
+
+echo "creating a writable snapshot of given subvolume"
+btrfs sub snap $SUBVOL $DIR/$NAME/rootfs
+
+echo "emptying the /etc/fstab file"
+echo > $DIR/$NAME/rootfs/etc/fstab
+
+echo "creating the config file"
+cat <<CONFIG > $DIR/$NAME/config
+
+# Template used to create this container: /usr/share/lxc/templates/lxc-download
+# Parameters passed to the template:
+# Template script checksum (SHA-1): 740c51206e35463362b735e68b867876048a8baf
+# For additional config options, please look at lxc.container.conf(5)
+
+# Uncomment the following line to support nesting containers:
+#lxc.include = /usr/share/lxc/config/nesting.conf
+# (Be aware this has security implications)
+
+
+# Distribution configuration
+lxc.include = /usr/share/lxc/config/debian.common.conf
+lxc.arch = x86_64
+
+# Container specific configuration
+lxc.rootfs = /var/lib/lxc/$NAME/rootfs
+lxc.rootfs.backend = dir
+lxc.utsname = $NAME
+
+# Network configuration
+lxc.network.type = veth
+lxc.network.link = br0
+lxc.network.hwaddr = 00:16:3e:7e:11:ac
+lxc.network.flags = up 
+
+
+# GUI configuration 
+#lxc.cgroup.devices.allow = c 226:0 rwm
+#lxc.cgroup.devices.allow = c 29:0 rwm
+#lxc.cgroup.devices.allow = c 4:7 rwm
+#lxc.cgroup.devices.allow = c 4:8 rwm
+
+CONFIG
+
+echo "done in $(($SECONDS - $START_TIME)) seconds..."
+
+cat <<USAGE
+
+to run the vm:
+
+	sudo lxc-start -n $NAME
+
+to attach the root console:
+
+	sudo lxc-attach -n $NAME
+
+USAGE

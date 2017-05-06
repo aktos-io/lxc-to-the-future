@@ -46,13 +46,13 @@ ERROR: No br0 bridge device found in  /etc/network/interfaces file.
 Edit your /etc/network/interfaces file and add/replace the following section 
 in place of "eth0" section 
 
-	configure
 	auto br0
 	iface br0 inet dhcp
 		bridge-ifaces eth0
 		bridge-ports eth0
 		up ifconfig eth0 up
 		
+	iface eth0 inet manual
 
 Then run the following: 
 

@@ -86,7 +86,7 @@ cat <<CONFIG > $DIR/$NAME/config
 
 # Distribution configuration
 lxc.include = /usr/share/lxc/config/debian.common.conf
-lxc.arch = x86_64
+lxc.arch = $(uname -m)
 
 # Container specific configuration
 lxc.rootfs = /var/lib/lxc/$NAME/rootfs

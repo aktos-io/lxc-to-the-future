@@ -69,7 +69,8 @@ echo "creating a writable snapshot of given subvolume"
 btrfs sub snap $SUBVOL $DIR/$NAME/rootfs
 
 echo "emptying the /etc/fstab file"
-echo > $DIR/$NAME/rootfs/etc/fstab
+mv $DIR/$NAME/rootfs/etc/fstab $DIR/$NAME/rootfs/etc/fstab.real 
+touch $DIR/$NAME/rootfs/etc/fstab
 
 HOST_FILE="$DIR/$NAME/rootfs/etc/hostname"
 ORIG_HOSTNAME=$(cat $HOST_FILE)

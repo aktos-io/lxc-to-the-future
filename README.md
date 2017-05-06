@@ -7,12 +7,12 @@ Create LXC virtual machines from any BTRFS subvolume. (origin is [here](https://
 I want to create a LXC VM from one of my snapshots: 
 
 
-		$ ./snapshot-lxc /mnt/erik/rootfs mytest6
+		$ ./snapshot-lxc /mnt/erik/snapshots/rootfs/rootfs.20170429T2001/ mytest6
 		This script needs root privileges.
 		[sudo] password for ceremcem: 
 		creating the container directory: mytest6
 		creating a writable snapshot of given subvolume
-		Create a snapshot of '/mnt/erik/rootfs' in '/var/lib/lxc/mytest6/rootfs'
+		Create a snapshot of '/mnt/erik/snapshots/rootfs/rootfs.20170429T2001' in '/var/lib/lxc/mytest6/rootfs'
 		emptying the /etc/fstab file
 		changing hostname from cca-erik to cca-erik_mytest6
 		creating the config file
@@ -30,7 +30,7 @@ I want to create a LXC VM from one of my snapshots:
 
 I need to attach the VM's console ([#FIXME](https://github.com/aktos-io/lxc-to-the-future/issues/2))
 
-		sudo lxc-attach -n mytest5
+		sudo lxc-attach -n mytest6
 		root@myhost:# dhclient eth0
 		root@myhost:# ifconfig eth0
 		eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
@@ -38,16 +38,20 @@ I need to attach the VM's console ([#FIXME](https://github.com/aktos-io/lxc-to-t
 				...
 
 
-
 Then I can make ssh: 
 
 		ssh 10.0.10.114
+
+
+# Convert VM to Real Host
 
 The machine on `10.0.10.114` is the exact copy of my snapshot located at `/mnt/erik/snapshots/rootfs/rootfs.20170429T2001/`
 
 I can install/purge any software, run a database at that time, make any configuration changes and test them. If I want to use that VM as my primary OS, I just need to snapshot the `rootfs`: 
 
-    btrfs sub snap /var/lib/lxc/mytest5/rootfs /mnt/erik/rootfs_test
+    btrfs sub snap /var/lib/lxc/mytest6/rootfs /mnt/erik/rootfs_test
+    cd /mnt/erik/rootfs_test/etc
+    mv fstab.real fstab
 
 Edit your `/boot/grub/grub.cfg` (or press `e` at boot time and edit the entry) to boot from `rootfs_test` subvolume: 
 
@@ -55,16 +59,20 @@ Edit your `/boot/grub/grub.cfg` (or press `e` at boot time and edit the entry) t
     linux	/vmlinuz-4.9.0-2-amd64 root=/dev/mapper/erik-root ro  rootflags=subvol=rootfs_test
     ...
     
-If everything goes well, you can make it permanent: 
+When your new system booted, check out if everything is OK. If so, you can make it permanent: 
 
     cd /mnt/erik  # the device root 
     mv rootfs rootfs.bak 
     btrfs sub snap rootfs_test rootfs 
     reboot 
     
+    
+> If something went wrong in this step, **simply reboot**, all changes will be - kind of - reverted. 
+
 If everything still goes well, clean the subvolumes: 
 
     btrfs sub delete /mnt/erik/rootfs_test 
     btrfs sub delete /mnt/erik/rootfs.bak 
+    
     
     

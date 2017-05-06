@@ -52,6 +52,7 @@ I can install/purge any software, run a database at that time, make any configur
     btrfs sub snap /var/lib/lxc/mytest6/rootfs /mnt/erik/rootfs_test
     cd /mnt/erik/rootfs_test/etc
     mv fstab.real fstab
+    mv hostname.real hostname
 
 Edit your `/boot/grub/grub.cfg` (or press `e` at boot time and edit the entry) to boot from `rootfs_test` subvolume: 
 

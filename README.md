@@ -59,16 +59,20 @@ Edit your `/boot/grub/grub.cfg` (or press `e` at boot time and edit the entry) t
     linux	/vmlinuz-4.9.0-2-amd64 root=/dev/mapper/erik-root ro  rootflags=subvol=rootfs_test
     ...
     
-If everything goes well, you can make it permanent: 
+When your new system booted, check out if everything is OK. If so, you can make it permanent: 
 
     cd /mnt/erik  # the device root 
     mv rootfs rootfs.bak 
     btrfs sub snap rootfs_test rootfs 
     reboot 
     
+    
+> If something went wrong in this step, simply reboot. 
+
 If everything still goes well, clean the subvolumes: 
 
     btrfs sub delete /mnt/erik/rootfs_test 
     btrfs sub delete /mnt/erik/rootfs.bak 
+    
     
     

@@ -6,49 +6,44 @@ Create LXC virtual machines from any BTRFS subvolume. (origin is [here](https://
 
 I want to create a LXC VM from one of my snapshots: 
 
-```
-./snapshot-lxc /mnt/erik/snapshots/rootfs/rootfs.20170429T2001/ mytest5
-This script needs root privileges.
-creating the container directory: mytest5
-creating a writable snapshot of given subvolume
-Create a snapshot of '/mnt/erik/snapshots/rootfs/rootfs.20170429T2001/' in '/var/lib/lxc/mytest5/rootfs'
-emptying the /etc/fstab file
-creating the config file
-done in 10 seconds...
 
-to run the vm:
+		$ ./snapshot-lxc /mnt/erik/rootfs mytest6
+		This script needs root privileges.
+		[sudo] password for ceremcem: 
+		creating the container directory: mytest6
+		creating a writable snapshot of given subvolume
+		Create a snapshot of '/mnt/erik/rootfs' in '/var/lib/lxc/mytest6/rootfs'
+		emptying the /etc/fstab file
+		changing hostname from cca-erik to cca-erik_mytest6
+		creating the config file
+		done in 1 seconds...
 
-        lxc-start -n mytest5
+		to run the vm:
 
-to attach the root console:
+			sudo lxc-start -n mytest6
 
-        lxc-attach -n mytest5
-```
+		to attach the root console:
+
+			sudo lxc-attach -n mytest6
+
+
 
 I need to attach the VM's console ([#FIXME](https://github.com/aktos-io/lxc-to-the-future/issues/2))
 
-```
-sudo lxc-attach -n mytest5
-root@myhost:# dhclient eth0
-root@myhost:# ifconfig eth0
-eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
-        inet 10.0.10.114  netmask 255.255.0.0  broadcast 10.0.255.255
-        inet6 fe80::216:3eff:fe7e:11ac  prefixlen 64  scopeid 0x20<link>
-        ether 00:16:3e:7e:11:ac  txqueuelen 1000  (Ethernet)
-        RX packets 277  bytes 26005 (25.3 KiB)
-        RX errors 0  dropped 0  overruns 0  frame 0
-        TX packets 100  bytes 13805 (13.4 KiB)
-        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+		sudo lxc-attach -n mytest5
+		root@myhost:# dhclient eth0
+		root@myhost:# ifconfig eth0
+		eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+				inet 10.0.10.114  netmask 255.255.0.0  broadcast 10.0.255.255
+				...
 
-```
+
 
 Then I can make ssh: 
 
-```
-ssh 10.0.10.114
-```
+		ssh 10.0.10.114
 
-The machine on `10.0.10.114` is the exact copy of my snapshot located at: `/mnt/erik/snapshots/rootfs/rootfs.20170429T2001/`
+The machine on `10.0.10.114` is the exact copy of my snapshot located at `/mnt/erik/snapshots/rootfs/rootfs.20170429T2001/`
 
 I can install/purge any software, run a database at that time, make any configuration changes and test them. If I want to use that VM as my primary OS, I just need to snapshot the `rootfs`: 
 

@@ -71,6 +71,13 @@ btrfs sub snap $SUBVOL $DIR/$NAME/rootfs
 echo "emptying the /etc/fstab file"
 echo > $DIR/$NAME/rootfs/etc/fstab
 
+HOST_FILE="$DIR/$NAME/rootfs/etc/hostname"
+ORIG_HOSTNAME=$(cat $HOST_FILE)
+NEW_HOSTNAME="${ORIG_HOSTNAME}_${NAME}"
+echo "changing hostname from $ORIG_HOSTNAME to $NEW_HOSTNAME"
+mv $HOST_FILE $HOST_FILE.real
+echo $NEW_HOSTNAME > $HOST_FILE
+
 echo "creating the config file"
 cat <<CONFIG > $DIR/$NAME/config
 

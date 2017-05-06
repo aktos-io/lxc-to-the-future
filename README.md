@@ -48,6 +48,8 @@ Then I can make ssh:
 ssh 10.0.10.114
 ```
 
+# Convert VM to Real Host
+
 The machine on `10.0.10.114` is the exact copy of my snapshot located at: `/mnt/erik/snapshots/rootfs/rootfs.20170429T2001/`
 
 I can install/purge any software, run a database at that time, make any configuration changes and test them. If I want to use that VM as my primary OS, I just need to snapshot the `rootfs`: 

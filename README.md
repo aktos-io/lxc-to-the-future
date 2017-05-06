@@ -33,12 +33,7 @@ root@myhost:# dhclient eth0
 root@myhost:# ifconfig eth0
 eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
         inet 10.0.10.114  netmask 255.255.0.0  broadcast 10.0.255.255
-        inet6 fe80::216:3eff:fe7e:11ac  prefixlen 64  scopeid 0x20<link>
-        ether 00:16:3e:7e:11:ac  txqueuelen 1000  (Ethernet)
-        RX packets 277  bytes 26005 (25.3 KiB)
-        RX errors 0  dropped 0  overruns 0  frame 0
-        TX packets 100  bytes 13805 (13.4 KiB)
-        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+        ...
 
 ```
 

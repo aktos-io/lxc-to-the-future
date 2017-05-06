@@ -53,6 +53,8 @@ The machine on `10.0.10.114` is the exact copy of my snapshot located at: `/mnt/
 I can install/purge any software, run a database at that time, make any configuration changes and test them. If I want to use that VM as my primary OS, I just need to snapshot the `rootfs`: 
 
     btrfs sub snap /var/lib/lxc/mytest5/rootfs /mnt/erik/rootfs_test
+    cd /mnt/erik/rootfs_test/etc
+    mv fstab.real fstab
 
 Edit your `/boot/grub/grub.cfg` (or press `e` at boot time and edit the entry) to boot from `rootfs_test` subvolume: 
 

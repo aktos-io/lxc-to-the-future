@@ -7,40 +7,40 @@ Create LXC virtual machines from any BTRFS subvolume. (origin is [here](https://
 I want to create a LXC VM from one of my snapshots: 
 
 
-		$ ./snapshot-lxc /mnt/erik/snapshots/rootfs/rootfs.20170429T2001/ mytest6
-		This script needs root privileges.
-		[sudo] password for ceremcem: 
-		creating the container directory: mytest6
-		creating a writable snapshot of given subvolume
-		Create a snapshot of '/mnt/erik/snapshots/rootfs/rootfs.20170429T2001' in '/var/lib/lxc/mytest6/rootfs'
-		emptying the /etc/fstab file
-		changing hostname from cca-erik to cca-erik_mytest6
-		creating the config file
-		done in 1 seconds...
+	$ ./snapshot-lxc /mnt/erik/snapshots/rootfs/rootfs.20170429T2001/ mytest6
+	This script needs root privileges.
+	[sudo] password for ceremcem: 
+	creating the container directory: mytest6
+	creating a writable snapshot of given subvolume
+	Create a snapshot of '/mnt/erik/snapshots/rootfs/rootfs.20170429T2001' in '/var/lib/lxc/mytest6/rootfs'
+	emptying the /etc/fstab file
+	changing hostname from cca-erik to cca-erik_mytest6
+	creating the config file
+	done in 1 seconds...
 
-		to run the vm:
+	to run the vm:
 
-			sudo lxc-start -n mytest6
+		sudo lxc-start -n mytest6
 
-		to attach the root console:
+	to attach the root console:
 
-			sudo lxc-attach -n mytest6
+		sudo lxc-attach -n mytest6
 
 
 
 I need to attach the VM's console ([#FIXME](https://github.com/aktos-io/lxc-to-the-future/issues/2))
 
-		sudo lxc-attach -n mytest6
-		root@myhost:# dhclient eth0
-		root@myhost:# ifconfig eth0
-		eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
-				inet 10.0.10.114  netmask 255.255.0.0  broadcast 10.0.255.255
-				...
+	sudo lxc-attach -n mytest6
+	root@myhost:# dhclient eth0
+	root@myhost:# ifconfig eth0
+	eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+			inet 10.0.10.114  netmask 255.255.0.0  broadcast 10.0.255.255
+			...
 
 
 Then I can make ssh: 
 
-		ssh 10.0.10.114
+	ssh 10.0.10.114
 
 
 # Convert VM to Real Host

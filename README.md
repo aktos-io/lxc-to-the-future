@@ -25,7 +25,7 @@ to attach the root console:
         lxc-attach -n mytest5
 ```
 
-I need to attach the VM's console (#FIXME)
+I need to attach the VM's console ([#FIXME](https://github.com/aktos-io/lxc-to-the-future/issues/2))
 
 ```
 sudo lxc-attach -n mytest5

@@ -31,8 +31,8 @@ I want to create a LXC VM from one of my snapshots:
 I need to attach the VM's console ([#FIXME](https://github.com/aktos-io/lxc-to-the-future/issues/2))
 
 	sudo lxc-attach -n mytest6
-	root@myhost:# dhclient eth0
-	root@myhost:# ifconfig eth0
+	root@cca-erik_mytest6:# dhclient eth0
+	root@cca-erik_mytest6:# ifconfig eth0
 	eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
 			inet 10.0.10.114  netmask 255.255.0.0  broadcast 10.0.255.255
 			...

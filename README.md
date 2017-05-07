@@ -45,33 +45,40 @@ Then I can make ssh:
 	ssh 10.0.10.114
 
 
-# Convert VM to Real Host
+# Advantages 
 
 The machine on `10.0.10.114` is the exact copy of my snapshot located at `/mnt/erik/snapshots/rootfs/rootfs.20170429T2001/`
 
-I can install/purge any software, run a database at that time, make any configuration changes and test them. If I want to use that VM as my primary OS, I just need to snapshot the `rootfs`: 
+I can install/purge any software, run a database at that time, make any configuration changes and test them, run any of these machines forever nearly with  no cost in terms of CPU, RAM (thanks to LXC), disk and time (thanks to BTRFS) resources.
+
+# Convert VM to Real Host
+
+If I want to use that VM as my primary OS, I just need to snapshot the `rootfs`: 
 
     btrfs sub snap /var/lib/lxc/mytest6/rootfs /mnt/erik/rootfs_test
     cd /mnt/erik/rootfs_test/etc
     mv fstab.real fstab
     mv hostname.real hostname
+    reboot
 
-Edit your `/boot/grub/grub.cfg` (or press `e` at boot time and edit the entry) to boot from `rootfs_test` subvolume: 
+Press `e` at boot time and edit the GRUB entry (or add an entry your `/boot/grub/grub.cfg`) to boot from `rootfs_test` subvolume: 
 
     ...
     linux	/vmlinuz-4.9.0-2-amd64 root=/dev/mapper/erik-root ro  rootflags=subvol=rootfs_test
     ...
     
-When your new system booted, check out if everything is OK. If so, you can make it permanent: 
+When your new system booted, check out if everything is OK. 
+
+> If something went wrong in this step, **simply reboot**, all changes will be - kind of - reverted. 
+
+If everything is OK, you can make it permanent: 
 
     cd /mnt/erik  # the device root 
     mv rootfs rootfs.bak 
     btrfs sub snap rootfs_test rootfs 
     reboot 
     
-    
-> If something went wrong in this step, **simply reboot**, all changes will be - kind of - reverted. 
-
+   
 If everything still goes well, clean the subvolumes: 
 
     btrfs sub delete /mnt/erik/rootfs_test 

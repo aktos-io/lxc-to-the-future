@@ -89,3 +89,4 @@ If everything still goes well, clean the subvolumes:
 # Recommended Tools 
 
 * [BTRBK](https://github.com/digint/btrbk) for taking scheduled snapshots 
+* Update `btrfs-progs`: https://github.com/ceremcem/install-btrfs-progs

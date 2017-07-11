@@ -33,5 +33,9 @@ Enable IP forwarding:
     net.ipv4.ip_forward=1    # Add this line or uncoment it
     ...
   
-Your container should `ping google.com` so far. Now forward some ports from host to container: 
+Your container should `ping google.com` so far. 
+
+# Port forwarding 
+
+Now forward some ports from host to container: 
 

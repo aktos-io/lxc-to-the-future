@@ -1,6 +1,6 @@
 # Setup NAT configuration 
 
-In the end, container will have following IP: `10.0.8.8`, Gateway: `10.0.8.1`
+> Container will have the IP: `10.0.8.8` and its gateway will be: `10.0.8.1`
 
 Change `lxc.network.` section in `/var/lib/lxc/your-container/config` as follows: 
 

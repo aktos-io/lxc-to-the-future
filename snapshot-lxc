@@ -46,13 +46,19 @@ if [[ "$(grep br0 /etc/network/interfaces)" == "" ]]; then
 ERROR: No br0 bridge device found in  /etc/network/interfaces file. 
 
 Edit your /etc/network/interfaces file and add/replace the following section 
-in addition to "eth0" section 
+in place of "eth0" section 
 
-	auto br0
-	iface br0 inet manual
-		bridge-ifaces eth0
-		bridge-ports eth0
-		up ifconfig eth0 up
+	auto eth0
+	iface eth0 inet static
+	    address xx.xx.xx.xx
+	    netmask yy.yy.yy.yy
+	    gateway zz.zz.zz.zz
+
+	auto br0 
+	iface br0 inet manual 
+	  bridge-ifaces eth0 
+	  bridge-ports eth0
+
 		
 Then run the following: 
 

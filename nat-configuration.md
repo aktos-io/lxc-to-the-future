@@ -33,9 +33,20 @@ Enable IP forwarding:
     net.ipv4.ip_forward=1    # Add this line or uncoment it
     ...
   
-Your container should `ping google.com` within the container so far. 
+Restart networking: 
+
+    /etc/init.d/networking restart
+    
+    
+You should `ping google.com` within the container so far. 
 
 # Port forwarding 
 
-Now forward some ports from host to container: 
+Now forward some ports from host to container: Edit again `/etc/network/interfaces` file on the host: 
 
+        iface eth0 inet ...
+            ...
+            up iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j DNAT --to 10.0.8.8:80
+            up iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j DNAT --to 10.0.8.8:443
+            
+Now you should be able to connect `10.0.8.8:443` by connecting `HOST_IP:443`. 

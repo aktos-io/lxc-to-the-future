@@ -59,7 +59,7 @@ echo "remove the LXC specific entry from GUEST/etc/network/interfaces file"
 IFACE_FILE=$GUEST_ROOT/etc/network/interfaces
 mv $IFACE_FILE $IFACE_FILE.real
 
-awk '/lxc-nat-bridge/ {do_print=0} 
+awk '/lxc-bridge/ {do_print=0} 
      do_print==1 {print}  
      NF==0 {do_print=1}' $IFACE_FILE.real > $IFACE_FILE
 
@@ -87,7 +87,7 @@ lxc.utsname = $NAME
 
 # Network configuration
 lxc.network.type = veth
-lxc.network.link = lxc-nat-bridge
+lxc.network.link = lxc-bridge
 lxc.network.flags = up 
 #lxc.network.ipv4 = 10.0.8.8
 #lxc.network.ipv4.gateway = 10.0.8.1

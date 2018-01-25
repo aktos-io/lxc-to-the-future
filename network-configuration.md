@@ -9,22 +9,19 @@ There are 2 types of network connection:
 
 > Container will have the IP: `10.0.8.8` and its gateway will be: `10.0.8.1`
 
-1. Change `lxc.network.` section in `/var/lib/lxc/your-container/config` as follows: 
+1. Add the followings to the `lxc.network.` section in `/var/lib/lxc/your-container/config`: 
 
 ```
-lxc.network.type = veth
-lxc.network.link = lxc-nat-bridge
-lxc.network.flags = up
 lxc.network.ipv4 = 10.0.8.8
 lxc.network.ipv4.gateway = 10.0.8.1
 ```
 
-2. Add `lxc-nat-bridge` in `/etc/network/interfaces` file: 
+2. Add `lxc-bridge` in `/etc/network/interfaces` file: 
 
 
 ```
-auto lxc-nat-bridge
-iface lxc-nat-bridge inet static
+auto lxc-bridge
+iface lxc-bridge inet static
     bridge_ports none
     bridge_fd 0
     address 10.0.8.1
@@ -46,7 +43,7 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 # Cleanup the iptables 
 iptables -F
 
-iptables -A FORWARD -i lxc-nat-bridge -s ${braddr}/24 -m conntrack --ctstate NEW -j ACCEPT
+iptables -A FORWARD -i lxc-bridge -s ${braddr}/24 -m conntrack --ctstate NEW -j ACCEPT
 iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 iptables -A POSTROUTING -t nat -j MASQUERADE 
 
@@ -65,7 +62,7 @@ chmod +x /etc/network/lxc-nat-bridge-up.sh
 
 4. For VMs that is the clone of Host itself 
 
-**IMPORTANT**: If you clone host machine itself (with `snapshot-lxc / my-vm` command) you should remove any LXC specific entry from `GUEST_ROOT/etc/network/interfaces` file, like `lxc-nat-bridge` entry. 
+**IMPORTANT**: If you clone host machine itself (with `snapshot-lxc / my-vm` command) you should remove any LXC specific entry from `GUEST_ROOT/etc/network/interfaces` file, like `lxc-bridge` entry. 
 
 
 5. Restart networking: 
@@ -78,8 +75,36 @@ You should `ping google.com` within the container.
 
 # 2. Setup Bridge Connection
 
+## Bridge with wired interface
+
+1. Edit `/etc/network/interfaces`:
+
+```
+auto lxc-bridge
+iface lxc-bridge inet dhcp
+    bridge_ifaces eth0
+    bridge_ports eth0
+    up ifconfig eth0 up
+```
+
+2. Edit your guest vm config and remove/change any static ip addresses: 
+
+```
+# (removed) lxc.network.ipv4 = 10.0.8.8
+# (removed) lxc.network.ipv4.gateway = 10.0.8.1
+```
+
+3. Use DHCP to obtain an IP address: 
+
+```
+your-guest# dhclient eth0
+```
+
+## Bridge with wireless interface 
+
 TODO...
 
+(see https://it-offshore.co.uk/linux/debian/60-debian-bridging-wireless-lxc-host-bridge)
 
 # Tests 
 

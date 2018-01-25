@@ -14,6 +14,8 @@ NAME=$2
 
 DIR="/var/lib/lxc"
 
+GUEST_ROOT="$DIR/$NAME/rootfs"
+
 if [[ "$SUBVOL" == "" || "$NAME" == "" ]]; then 
 	cat <<ERR
 
@@ -31,66 +33,38 @@ fi
 
 if [[ "$SUBVOL" == "delete" ]]; then 
 	read -p "Press enter to delete LXC container: $NAME"
-	btrfs sub delete $DIR/$NAME/rootfs 
-	rm -r $DIR/$NAME
-	exit
-fi
-
-# setup a bridge interface
-
-if [[ "$(grep br0 /etc/network/interfaces)" == "" ]]; then 
-	cat <<ONETIME
-	
-*********** edit your /etc/network/interfaces file ***********
-
-ERROR: No br0 bridge device found in  /etc/network/interfaces file. 
-
-Edit your /etc/network/interfaces file and add/replace the following section 
-in place of "eth0" section 
-
-	auto eth0
-	iface eth0 inet static
-	    address xx.xx.xx.xx
-	    netmask yy.yy.yy.yy
-	    gateway zz.zz.zz.zz
-
-	auto br0 
-	iface br0 inet manual 
-	    bridge-ports eth0
-	    bridge_fd 0 
-	    bridge_stp off
-	    bridge_waitport 0 
-	    bridge_maxwait 0  
-		
-Then run the following: 
-
-	sudo ifup br0
-	
-****************************************************************
-
-ONETIME
+	btrfs sub delete $GUEST_ROOT
+	rm -r $(dirname $GUEST_ROOT)
 	exit
 fi
 
 echo "creating the container directory: $NAME"
-mkdir $DIR/$NAME
+mkdir $(dirname $GUEST_ROOT)
 
 echo "creating a writable snapshot of given subvolume"
-btrfs sub snap $SUBVOL $DIR/$NAME/rootfs
+btrfs sub snap $SUBVOL $GUEST_ROOT
 
 echo "emptying the /etc/fstab file"
-mv $DIR/$NAME/rootfs/etc/fstab $DIR/$NAME/rootfs/etc/fstab.real 
-touch $DIR/$NAME/rootfs/etc/fstab
+mv $GUEST_ROOT/etc/fstab $GUEST_ROOT/etc/fstab.real 
+touch $GUEST_ROOT/etc/fstab
 
-HOST_FILE="$DIR/$NAME/rootfs/etc/hostname"
+HOST_FILE="$GUEST_ROOT/etc/hostname"
 ORIG_HOSTNAME=$(cat $HOST_FILE)
-NEW_HOSTNAME="${ORIG_HOSTNAME}_${NAME}"
+NEW_HOSTNAME="${ORIG_HOSTNAME}-${NAME}"
 echo "changing hostname from $ORIG_HOSTNAME to $NEW_HOSTNAME"
 mv $HOST_FILE $HOST_FILE.real
 echo $NEW_HOSTNAME > $HOST_FILE
 
+echo "remove the LXC specific entry from GUEST/etc/network/interfaces file"
+IFACE_FILE=$GUEST_ROOT/etc/network/interfaces
+mv $IFACE_FILE $IFACE_FILE.real
+
+awk '/lxc-nat-bridge/ {do_print=0} 
+     do_print==1 {print}  
+     NF==0 {do_print=1}' $IFACE_FILE.real > $IFACE_FILE
+
 echo "creating the config file"
-cat <<CONFIG > $DIR/$NAME/config
+cat <<CONFIG > $(dirname $GUEST_ROOT)/config
 
 # Template used to create this container: /usr/share/lxc/templates/lxc-download
 # Parameters passed to the template:
@@ -113,10 +87,10 @@ lxc.utsname = $NAME
 
 # Network configuration
 lxc.network.type = veth
-lxc.network.link = br0
-lxc.network.hwaddr = 00:16:3e:7e:11:ac
+lxc.network.link = lxc-nat-bridge
 lxc.network.flags = up 
-
+#lxc.network.ipv4 = 10.0.8.8
+#lxc.network.ipv4.gateway = 10.0.8.1
 
 # GUI configuration 
 #lxc.cgroup.devices.allow = c 226:0 rwm
@@ -138,4 +112,11 @@ to attach the root console:
 
 	sudo lxc-attach -n $NAME
 
+---------------------------------------------------
+                  NOTE:
+
+Do not forget to configure network settings.
+(see ./network-configuration.md)
+
+---------------------------------------------------
 USAGE

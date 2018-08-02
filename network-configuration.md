@@ -26,10 +26,10 @@ iface lxc-bridge inet static
     bridge_fd 0
     address 10.0.8.1
     netmask 255.255.0.0
-    up /etc/network/lxc-nat-setup.sh
+    up /etc/network/lxc-nat-setup.sh # or use iptables-persistent to make the rules persistent in the script
 ```
 
-3. Create the following as `/etc/network/lxc-nat-setup.sh`:
+3. Create `/etc/network/lxc-nat-setup.sh` (unless you use `iptables-persistent` or something like that):
 
 
 ```bash

@@ -40,17 +40,18 @@ braddr=10.0.8.1
 # Make sure that the IP forwarding is enabled 
 echo 1 > /proc/sys/net/ipv4/ip_forward
 
-# Cleanup the iptables 
+# Cleanup the iptables (Warning: this may prevent other scripts to add their rules)
 iptables -F
+iptables -F -t nat
 
 iptables -A FORWARD -i lxc-bridge -s ${braddr}/24 -m conntrack --ctstate NEW -j ACCEPT
 iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 iptables -A POSTROUTING -t nat -j MASQUERADE 
+## Now you should be able to connect `10.0.8.8:443` by connecting `HOST_IP:443`. 
 
 ## if port forwarding is desired, uncomment the following lines:
 #iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j DNAT --to 10.0.8.8:80
 #iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j DNAT --to 10.0.8.8:443
-## Now you should be able to connect `10.0.8.8:443` by connecting `HOST_IP:443`. 
 
 ```
 
@@ -70,7 +71,7 @@ chmod +x /etc/network/lxc-nat-bridge-up.sh
 /etc/init.d/networking restart
 ```
 
-You should `ping google.com` within the container. 
+You should `ping google.com` within the container. (if something goes wrong, try to restart the guest vm)
 
 
 # 2. Setup Bridge Connection

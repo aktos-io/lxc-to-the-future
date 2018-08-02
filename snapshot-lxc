@@ -51,8 +51,8 @@ touch $GUEST_ROOT/etc/fstab
 
 HOST_FILE="$GUEST_ROOT/etc/hostname"
 ORIG_HOSTNAME=$(cat $HOST_FILE)
-NEW_HOSTNAME="${ORIG_HOSTNAME}-${NAME}"
-echo "changing hostname from $ORIG_HOSTNAME to $NEW_HOSTNAME"
+NEW_HOSTNAME="${NAME}"
+echo "changing hostname from $ORIG_HOSTNAME to $NEW_HOSTNAME (change in GUEST/etc/hostname)"
 mv $HOST_FILE $HOST_FILE.real
 echo $NEW_HOSTNAME > $HOST_FILE
 

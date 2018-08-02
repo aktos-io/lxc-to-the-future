@@ -1,12 +1,6 @@
 #!/bin/bash 
 
 
-if [[ "$(whoami)" != "root" ]]; then 
-	echo "This script needs root privileges."
-	sudo $0 $*
-	exit 
-fi 
-
 START_TIME=$SECONDS
 
 SUBVOL=$1
@@ -30,6 +24,13 @@ in order to delete a LXC container, run
 ERR
 	exit 
 fi
+
+if [[ "$(whoami)" != "root" ]]; then 
+	echo "This script needs root privileges."
+	sudo $0 $*
+	exit 
+fi 
+
 
 if [[ "$SUBVOL" == "delete" ]]; then 
 	read -p "Press enter to delete LXC container: $NAME"

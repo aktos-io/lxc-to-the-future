@@ -1,43 +1,43 @@
-#!/bin/bash 
+#!/bin/bash
+set -eu -o pipefail
+set_dir(){ _dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; }; set_dir
+safe_source () { source $1; set_dir; }
+# end of bash boilerplate
 
-
-START_TIME=$SECONDS
-
-SUBVOL=$1
-NAME=$2
+SUBVOL=${1:-}
+NAME=${2:-}
 
 DIR="/var/lib/lxc"
-
 GUEST_ROOT="$DIR/$NAME/rootfs"
 
-if [[ "$SUBVOL" == "" || "$NAME" == "" ]]; then 
+if [[ "$SUBVOL" == "" || "$NAME" == "" ]]; then
 	cat <<ERR
 
-usage: 
+usage:
 
 	$0 /path/to/subvolume your-container-name
 
-in order to delete a LXC container, run 
+in order to delete a LXC container, run
 
 	$0 delete your-container-name
 
 ERR
-	exit 
+	exit
 fi
 
-if [[ "$(whoami)" != "root" ]]; then 
-	echo "This script needs root privileges."
-	sudo $0 $*
-	exit 
-fi 
+# All checks are done, run as root.
+[[ $(whoami) = "root" ]] || { sudo $0 $*; exit 0; }
 
-
-if [[ "$SUBVOL" == "delete" ]]; then 
+if [[ "$SUBVOL" == "delete" ]]; then
 	read -p "Press enter to delete LXC container: $NAME"
+    set +e
+    lxc-stop -n $NAME
 	btrfs sub delete $GUEST_ROOT
 	rm -r $(dirname $GUEST_ROOT)
 	exit
 fi
+
+START_TIME=$SECONDS
 
 echo "creating the container directory: $NAME"
 mkdir $(dirname $GUEST_ROOT)
@@ -46,7 +46,7 @@ echo "creating a writable snapshot of given subvolume"
 btrfs sub snap $SUBVOL $GUEST_ROOT
 
 echo "emptying the /etc/fstab file"
-mv $GUEST_ROOT/etc/fstab $GUEST_ROOT/etc/fstab.real 
+mv $GUEST_ROOT/etc/fstab $GUEST_ROOT/etc/fstab.real
 touch $GUEST_ROOT/etc/fstab
 
 HOST_FILE="$GUEST_ROOT/etc/hostname"
@@ -60,9 +60,35 @@ echo "remove the LXC specific entry from GUEST/etc/network/interfaces file"
 IFACE_FILE=$GUEST_ROOT/etc/network/interfaces
 mv $IFACE_FILE $IFACE_FILE.real
 
-awk '/lxc-bridge/ {do_print=0} 
-     do_print==1 {print}  
+awk '/lxc-bridge/ {do_print=0}
+     do_print==1 {print}
      NF==0 {do_print=1}' $IFACE_FILE.real > $IFACE_FILE
+
+echo "adding $NEW_HOSTNAME to GUEST/etc/hosts"
+hosts_file="$GUEST_ROOT/etc/hosts"
+grep -q '^127\.0\.1\.1' $hosts_file && \
+    sed -i "s/^127\.0\.1\.1.*/127\.0\.1\.1 $NEW_HOSTNAME/" $hosts_file || \
+    echo "127.0.1.1 $NEW_HOSTNAME" >> $hosts_file
+
+reset_sshd_script="/root/reset-sshd.sh"
+echo "adding GUEST$reset_sshd_script"
+cat <<RESET_SSHD > $GUEST_ROOT/$reset_sshd_script
+#!/bin/bash
+set -eu -o pipefail
+set_dir(){ _dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; }; set_dir
+safe_source () { source $1; set_dir; }
+# end of bash boilerplate
+
+[[ $(whoami) = "root" ]] || { sudo $0 $*; exit 0; }
+
+rm /etc/ssh/ssh_host_*
+find /etc/ssh -name 'ssh_host_*' -exec mv {} {}.bak \;
+dpkg-reconfigure openssh-server
+/etc/init.d/ssh restart
+
+RESET_SSHD
+
+chmod +x $GUEST_ROOT/$reset_sshd_script
 
 echo "creating the config file"
 cat <<CONFIG > $(dirname $GUEST_ROOT)/config
@@ -89,11 +115,11 @@ lxc.utsname = $NAME
 # Network configuration
 lxc.network.type = veth
 lxc.network.link = lxc-bridge
-lxc.network.flags = up 
+lxc.network.flags = up
 #lxc.network.ipv4 = 10.0.8.8
 #lxc.network.ipv4.gateway = 10.0.8.1
 
-# GUI configuration 
+# GUI configuration
 #lxc.cgroup.devices.allow = c 226:0 rwm
 #lxc.cgroup.devices.allow = c 29:0 rwm
 #lxc.cgroup.devices.allow = c 4:7 rwm
@@ -116,8 +142,8 @@ to attach the root console:
 ---------------------------------------------------
                   NOTE:
 
-Do not forget to configure network settings.
-(see ./network-configuration.md)
+* Configure network in /var/lib/lxc/$NAME/config
+* Reset SSH server keys with GUEST$reset_sshd_script if necessary
 
 ---------------------------------------------------
 USAGE

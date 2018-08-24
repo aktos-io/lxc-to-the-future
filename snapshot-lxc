@@ -2,36 +2,105 @@
 set -eu -o pipefail
 safe_source () { [[ ! -z ${1:-} ]] && source $1; _dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; _sdir=$(dirname "$(readlink -f "$0")"); }; safe_source
 
-SUBVOL=${1:-}
-NAME=${2:-}
 
-DIR="/var/lib/lxc"
-GUEST_ROOT="$DIR/$NAME/rootfs"
+safe_source $_sdir/dcs-tools/aktos-bash-lib/all.sh
 
-if [[ "$SUBVOL" == "" || "$NAME" == "" ]]; then
-	cat <<ERR
+# show help
+show_help(){
+    cat <<HELP
 
-usage:
+    Usage:
 
-	$(basename $0) /path/to/subvolume your-container-name
+    	$(basename $0) ...options
 
-in order to delete a LXC container, run
 
-	$(basename $0) delete your-container-name
+    Options
 
-ERR
-	exit
-fi
+        --src /path/to/subvolume      : Subvolume source
+        --name your-container-name    : Container name
+
+        --delete your-container-name  : Delete the container
+        --keep-ssh-keys               : Do not regenerate SSH keys
+        --config-network              : Configure network after creation
+
+HELP
+    exit
+}
+
+die(){
+    echo_red "$1"
+    show_help
+    exit 1
+}
+
+new_keys=true
+NAME=
+SUBVOL=
+delete_vm=false
+config_network=false
+
+# Parse command line arguments
+args=("$@")
+_count=1
+while :; do
+    key="${1:-}"
+    case $key in
+        -h|-\?|--help|'')
+            show_help    # Display a usage synopsis.
+            exit
+            ;;
+        # --------------------------------------------------------
+        --name) shift
+            if [[ ! -z ${1:-} ]]; then
+                NAME=$1
+                shift
+            fi
+            ;;
+
+        --src) shift
+            if [[ ! -z ${1:-} ]]; then
+                SUBVOL=$1
+                shift
+            fi
+            ;;
+        --keep-ssh-keys) shift
+            new_keys=false
+            ;;
+        --config-network) shift
+            config_network=true
+            ;;
+        --delete) shift
+            delete_vm=true
+            if [[ ! -z ${1:-} ]]; then
+                NAME=$1
+                shift
+            fi
+            ;;
+        # --------------------------------------------------------
+        *)  # generate the positional arguments
+            declare _arg$((_count++))="$1"
+            shift
+    esac
+    [[ -z ${1:-} ]] && break
+done; set -- "${args[@]}"
+# use $_arg1 in place of $1, $_arg2 in place of $2 and so on, "$@" is intact
+
+# Check parameters
+[[ -z $NAME ]] && die "Name of VM is required."
+[[ $delete_vm = false ]] && [[ -z $SUBVOL ]] && die "Source BTRFS subvolume is required"
 
 # All checks are done, run as root.
-[[ $(whoami) = "root" ]] || { sudo $0 $*; exit 0; }
+[[ $(whoami) = "root" ]] || { sudo $0 "$@"; exit 0; }
 
-if [[ "$SUBVOL" == "delete" ]]; then
-	read -p "Press enter to delete LXC container: $NAME"
+GUEST_ROOT="/var/lib/lxc/$NAME/rootfs"
+
+if [[ $delete_vm = true ]]; then
+	read -p "Press enter to stop and delete LXC container: $NAME"
     set +e
     lxc-stop -n $NAME
 	btrfs sub delete $GUEST_ROOT
 	rm -r $(dirname $GUEST_ROOT)
+    echo_green "Removed $NAME"
 	exit
 fi
 
@@ -43,10 +112,13 @@ mkdir $(dirname $GUEST_ROOT)
 echo "creating a writable snapshot of given subvolume"
 btrfs sub snap $SUBVOL $GUEST_ROOT
 
+_param=
+[[ $new_keys = false ]] && _param="--skip-ssh-keys"
+
 $_sdir/dcs-tools/give-new-id \
     --hostname $NAME \
     --root-dir $GUEST_ROOT \
-    --skip-ssh-keys
+    $_param
 
 echo "emptying the /etc/fstab file"
 mv $GUEST_ROOT/etc/fstab $GUEST_ROOT/etc/fstab.real
@@ -98,7 +170,7 @@ lxc.network.flags = up
 
 CONFIG
 
-echo "done in $(($SECONDS - $START_TIME)) seconds..."
+echo_green "done in $(($SECONDS - $START_TIME)) seconds..."
 
 cat <<USAGE
 
@@ -117,3 +189,6 @@ to attach the root console:
 
 ---------------------------------------------------
 USAGE
+
+# Open configuration file
+[[ $config_network = true ]] && nano /var/lib/lxc/$NAME/config

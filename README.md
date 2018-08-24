@@ -4,6 +4,14 @@
 
 Create LXC virtual machines from any BTRFS subvolume. (origin is [here](https://unix.stackexchange.com/questions/362527/how-to-boot-a-virtual-machine-from-a-regular-folder))
 
+### Differences from Docker 
+
+This tool aims very much like what Docker does, with some key differences: 
+
+* Takes advantage of BTRFS snapshots. 
+* Requires BTRFS filesystem.
+* No black magic. You will/can assemble every moving part all by yourself. No overlays, no cryptic folder names, nothing.
+
 # Install
 
 ```console
@@ -27,16 +35,16 @@ cd lxc-to-the-future
 
 ```
 
-# Example usage
+# Example Run
 
 I want to create a LXC VM from one of my snapshots:
 
 
 ```console
-$ ./snapshot-lxc --src /path/to/snapshots/rootfs/ --name couchdb
+$ ./snapshot-lxc --src /mnt/erik/snapshots/rootfs/rootfs.20170429T2001/ --name couchdb
 creating the container directory: couchdb
 creating a writable snapshot of given subvolume
-Create a snapshot of '/path/to/snapshots/rootfs/' in '/var/lib/lxc/couchdb/rootfs'
+Create a snapshot of '/mnt/erik/snapshots/rootfs/rootfs.20170429T2001/' in '/var/lib/lxc/couchdb/rootfs'
 Creating new identity for /var/lib/lxc/couchdb/rootfs
 Renew hostname from cca-erik to couchdb
 Adding couchdb to TARGET/etc/hosts
@@ -74,9 +82,9 @@ To make network settings for your needs as stated above, see [network-configurat
 
 Start and attach the VM's console and test internet connection:
 
-	sudo lxc-start -n mycouch
-	sudo lxc-attach -n mycouch
-	root@cca-erik-mycouch:# ping google.com
+	sudo lxc-start -n couchdb
+	sudo lxc-attach -n couchdb
+	root@couchdb:# ping google.com
     PING google.com (216.58.206.206) 56(84) bytes of data.
     64 bytes from sof02s28-in-f14.1e100.net (216.58.206.206): icmp_seq=1 ttl=51 time=64.5 ms
     64 bytes from sof02s28-in-f14.1e100.net (216.58.206.206): icmp_seq=2 ttl=51 time=64.7 ms
@@ -101,7 +109,7 @@ I can install/purge any software, run a database at that time, make any configur
 
 If I want to use that VM as my primary OS, I just need to snapshot the `rootfs`:
 
-    btrfs sub snap /var/lib/lxc/mytest6/rootfs /mnt/erik/rootfs_test
+    btrfs sub snap /var/lib/lxc/couchdb/rootfs /mnt/erik/rootfs_test
     cd /mnt/erik/rootfs_test/etc
     mv fstab.real fstab
     mv hostname.real hostname

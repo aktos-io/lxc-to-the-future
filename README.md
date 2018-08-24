@@ -1,12 +1,35 @@
 ![image](https://cloud.githubusercontent.com/assets/6639874/25785684/93dfed2a-338f-11e7-85cb-27e17fb8dfef.png)
 
-# LXC To The Future 
+# LXC To The Future
 
 Create LXC virtual machines from any BTRFS subvolume. (origin is [here](https://unix.stackexchange.com/questions/362527/how-to-boot-a-virtual-machine-from-a-regular-folder))
 
+# Install
+
+```console
+git clone --recursive https://github.com/aktos-io/lxc-to-the-future
+cd lxc-to-the-future
+./snapshot-lxc
+
+    Usage:
+
+    	snapshot-lxc ...options
+
+
+    Options
+
+        --src /path/to/subvolume      : Subvolume source
+        --name your-container-name    : Container name
+
+        --delete your-container-name  : Delete the container
+        --keep-ssh-keys               : Do not regenerate SSH keys
+        --config-network              : Configure network after creation
+
+```
+
 # Example usage
 
-I want to create a LXC VM from one of my snapshots: 
+I want to create a LXC VM from one of my snapshots:
 
 
 ```
@@ -55,12 +78,12 @@ Start and attach the VM's console and test internet connection:
     rtt min/avg/max/mdev = 64.545/64.656/64.768/0.277 ms
 
 
-Then make ssh: 
+Then make ssh:
 
 	ssh 10.0.8.8
 
 
-# Advantages 
+# Advantages
 
 The machine on `10.0.8.8` is the exact copy of my snapshot located at `/mnt/erik/snapshots/rootfs/rootfs.20170429T2001/`
 
@@ -68,7 +91,7 @@ I can install/purge any software, run a database at that time, make any configur
 
 # Convert VM to Real Host
 
-If I want to use that VM as my primary OS, I just need to snapshot the `rootfs`: 
+If I want to use that VM as my primary OS, I just need to snapshot the `rootfs`:
 
     btrfs sub snap /var/lib/lxc/mytest6/rootfs /mnt/erik/rootfs_test
     cd /mnt/erik/rootfs_test/etc
@@ -77,25 +100,25 @@ If I want to use that VM as my primary OS, I just need to snapshot the `rootfs`:
     mv network/interfaces.real /network/interfaces
     reboot
 
-Press `e` at boot time and edit the GRUB entry (or add an entry your `/boot/grub/grub.cfg`) to boot from `rootfs_test` subvolume: 
+Press `e` at boot time and edit the GRUB entry (or add an entry your `/boot/grub/grub.cfg`) to boot from `rootfs_test` subvolume:
 
     ...
     linux	/vmlinuz-4.9.0-2-amd64 root=/dev/mapper/erik-root ro  rootflags=subvol=rootfs_test
     ...
 
-When your new system booted, check out if everything is OK. 
+When your new system booted, check out if everything is OK.
 
-> If something went wrong in this step, **simply reboot**, all changes will be - kind of - reverted. 
+> If something went wrong in this step, **simply reboot**, all changes will be - kind of - reverted.
 
-If everything is OK, you can make it permanent: 
+If everything is OK, you can make it permanent:
 
-    cd /mnt/erik  # the device root 
-    mv rootfs rootfs.bak 
-    btrfs sub snap rootfs_test rootfs 
-    reboot 
+    cd /mnt/erik  # the device root
+    mv rootfs rootfs.bak
+    btrfs sub snap rootfs_test rootfs
+    reboot
 
 
-If everything still goes well, clean the subvolumes: 
+If everything still goes well, clean the subvolumes:
 
-    btrfs sub delete /mnt/erik/rootfs_test 
-    btrfs sub delete /mnt/erik/rootfs.bak 
+    btrfs sub delete /mnt/erik/rootfs_test
+    btrfs sub delete /mnt/erik/rootfs.bak

@@ -8,9 +8,10 @@ Create LXC virtual machines from any BTRFS subvolume. (origin is [here](https://
 
 This tool aims very much like what Docker does, with some key differences: 
 
-* Takes advantage of BTRFS snapshots. 
-* Requires BTRFS filesystem.
+* Requires a BTRFS filesystem to work with.
 * No black magic. You will/can assemble every moving part all by yourself. No overlays, no cryptic folder names, nothing.
+* Virtual machines can be converted back to host machines.
+* A virtual machine can be produced from a backup.
 
 # Install
 

@@ -32,33 +32,41 @@ cd lxc-to-the-future
 I want to create a LXC VM from one of my snapshots:
 
 
-```
-$ snapshot-lxc /mnt/erik/snapshots/rootfs/rootfs.20170429T2001/ mycouch
-This script needs root privileges.
-creating the container directory: mycouch
+```console
+$ ./snapshot-lxc --src /path/to/snapshots/rootfs/ --name couchdb
+creating the container directory: couchdb
 creating a writable snapshot of given subvolume
-Create a snapshot of '/mnt/erik/snapshots/rootfs/rootfs.20170429T2001/' in '/var/lib/lxc/mycouch/rootfs'
+Create a snapshot of '/path/to/snapshots/rootfs/' in '/var/lib/lxc/couchdb/rootfs'
+Creating new identity for /var/lib/lxc/couchdb/rootfs
+Renew hostname from cca-erik to couchdb
+Adding couchdb to TARGET/etc/hosts
+Re-generating ssh private keys for users
+...for ceremcem
+Re-generating SSH Server Keys for /var/lib/lxc/couchdb/rootfs
+...generating /var/lib/lxc/couchdb/rootfs/etc/ssh/ssh_host_rsa_key
+...generating /var/lib/lxc/couchdb/rootfs/etc/ssh/ssh_host_dsa_key
+...generating /var/lib/lxc/couchdb/rootfs/etc/ssh/ssh_host_ecdsa_key
+...generating /var/lib/lxc/couchdb/rootfs/etc/ssh/ssh_host_ed25519_key
 emptying the /etc/fstab file
-changing hostname from cca-erik to cca-erik-mycouch
 remove the LXC specific entry from GUEST/etc/network/interfaces file
 creating the config file
-done in 6 seconds...
+done in 3 seconds...
 
 to run the vm:
 
-	sudo lxc-start -n mycouch
+	sudo lxc-start -n couchdb
 
 to attach the root console:
 
-	sudo lxc-attach -n mycouch
+	sudo lxc-attach -n couchdb
 
 ---------------------------------------------------
                   NOTE:
 
-Do not forget to configure network settings.
-(see ./network-configuration.md)
+* Configure network in /var/lib/lxc/couchdb/config
 
 ---------------------------------------------------
+
 ```
 
 
@@ -108,7 +116,7 @@ Press `e` at boot time and edit the GRUB entry (or add an entry your `/boot/grub
 
 When your new system booted, check out if everything is OK.
 
-> If something went wrong in this step, **simply reboot**, all changes will be - kind of - reverted.
+> If something went wrong in this step, **simply reboot**, all changes will be discarded.
 
 If everything is OK, you can make it permanent:
 

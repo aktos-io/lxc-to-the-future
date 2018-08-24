@@ -1,0 +1,3 @@
+[submodule "dcs-tools"]
+	path = dcs-tools
+	url = https://github.com/aktos-io/dcs-tools

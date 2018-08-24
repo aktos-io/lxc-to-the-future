@@ -1,8 +1,6 @@
 #!/bin/bash
 set -eu -o pipefail
-set_dir(){ _dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; }; set_dir
-safe_source () { source $1; set_dir; }
-# end of bash boilerplate
+safe_source () { [[ ! -z ${1:-} ]] && source $1; _dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; _sdir=$(dirname "$(readlink -f "$0")"); }; safe_source
 
 SUBVOL=${1:-}
 NAME=${2:-}
@@ -15,11 +13,11 @@ if [[ "$SUBVOL" == "" || "$NAME" == "" ]]; then
 
 usage:
 
-	$0 /path/to/subvolume your-container-name
+	$(basename $0) /path/to/subvolume your-container-name
 
 in order to delete a LXC container, run
 
-	$0 delete your-container-name
+	$(basename $0) delete your-container-name
 
 ERR
 	exit
@@ -45,16 +43,14 @@ mkdir $(dirname $GUEST_ROOT)
 echo "creating a writable snapshot of given subvolume"
 btrfs sub snap $SUBVOL $GUEST_ROOT
 
+$_sdir/dcs-tools/give-new-id \
+    --hostname $NAME \
+    --root-dir $GUEST_ROOT \
+    --skip-ssh-keys
+
 echo "emptying the /etc/fstab file"
 mv $GUEST_ROOT/etc/fstab $GUEST_ROOT/etc/fstab.real
 touch $GUEST_ROOT/etc/fstab
-
-HOST_FILE="$GUEST_ROOT/etc/hostname"
-ORIG_HOSTNAME=$(cat $HOST_FILE)
-NEW_HOSTNAME="${NAME}"
-echo "changing hostname from $ORIG_HOSTNAME to $NEW_HOSTNAME (change in GUEST/etc/hostname)"
-mv $HOST_FILE $HOST_FILE.real
-echo $NEW_HOSTNAME > $HOST_FILE
 
 echo "remove the LXC specific entry from GUEST/etc/network/interfaces file"
 IFACE_FILE=$GUEST_ROOT/etc/network/interfaces
@@ -64,31 +60,6 @@ awk '/lxc-bridge/ {do_print=0}
      do_print==1 {print}
      NF==0 {do_print=1}' $IFACE_FILE.real > $IFACE_FILE
 
-echo "adding $NEW_HOSTNAME to GUEST/etc/hosts"
-hosts_file="$GUEST_ROOT/etc/hosts"
-grep -q '^127\.0\.1\.1' $hosts_file && \
-    sed -i "s/^127\.0\.1\.1.*/127\.0\.1\.1 $NEW_HOSTNAME/" $hosts_file || \
-    echo "127.0.1.1 $NEW_HOSTNAME" >> $hosts_file
-
-reset_sshd_script="/root/reset-sshd.sh"
-echo "adding GUEST$reset_sshd_script"
-cat <<RESET_SSHD > $GUEST_ROOT/$reset_sshd_script
-#!/bin/bash
-set -eu -o pipefail
-set_dir(){ _dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; }; set_dir
-safe_source () { source $1; set_dir; }
-# end of bash boilerplate
-
-[[ $(whoami) = "root" ]] || { sudo $0 $*; exit 0; }
-
-rm /etc/ssh/ssh_host_*
-find /etc/ssh -name 'ssh_host_*' -exec mv {} {}.bak \;
-dpkg-reconfigure openssh-server
-/etc/init.d/ssh restart
-
-RESET_SSHD
-
-chmod +x $GUEST_ROOT/$reset_sshd_script
 
 echo "creating the config file"
 cat <<CONFIG > $(dirname $GUEST_ROOT)/config
@@ -143,7 +114,6 @@ to attach the root console:
                   NOTE:
 
 * Configure network in /var/lib/lxc/$NAME/config
-* Reset SSH server keys with GUEST$reset_sshd_script if necessary
 
 ---------------------------------------------------
 USAGE

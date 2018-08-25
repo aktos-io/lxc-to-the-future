@@ -77,6 +77,12 @@ while :; do
             fi
             ;;
         # --------------------------------------------------------
+        --*)
+            echo
+            echo "Unknown option: $1"
+            show_help
+            exit 1
+            ;;
         *)  # generate the positional arguments
             declare _arg$((_count++))="$1"
             shift

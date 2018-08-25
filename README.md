@@ -91,6 +91,12 @@ Then make ssh:
 	ssh 10.0.8.8
 
 
+# Running GUI Applications
+
+Make ssh connection with X Forwarding:
+
+    ssh -X 10.0.8.8 freecad
+
 # Advantages
 
 The machine on `10.0.8.8` is the exact copy of my snapshot located at `/mnt/erik/snapshots/rootfs/rootfs.20170429T2001/`

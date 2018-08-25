@@ -162,12 +162,6 @@ lxc.network.flags = up
 #lxc.network.ipv4 = 10.0.8.8
 #lxc.network.ipv4.gateway = 10.0.8.1
 
-# GUI configuration
-#lxc.cgroup.devices.allow = c 226:0 rwm
-#lxc.cgroup.devices.allow = c 29:0 rwm
-#lxc.cgroup.devices.allow = c 4:7 rwm
-#lxc.cgroup.devices.allow = c 4:8 rwm
-
 CONFIG
 
 echo_green "done in $(($SECONDS - $START_TIME)) seconds..."
@@ -181,6 +175,10 @@ to run the vm:
 to attach the root console:
 
 	sudo lxc-attach -n $NAME
+
+to run GUI applications, make SSH with X forwarding:
+
+    ssh -X youruser@container-ip
 
 ---------------------------------------------------
                   NOTE:

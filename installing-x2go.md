@@ -7,7 +7,7 @@ x2go is an efficient remote desktop software, suitable for slow connections. Bes
 1. Add the repository archive keys: 
 
 ```
-$ apt-key adv --recv-keys --keyserver keys.gnupg.net E1F958385BFE2B6E
+sudo apt-key adv --recv-keys --keyserver keys.gnupg.net E1F958385BFE2B6E
 ```
 
 2. Add the following to `/etc/apt/sources.list.d/x2go.list`: 

@@ -168,6 +168,9 @@ lxc.network.flags = up
 #lxc.network.ipv4 = 10.0.8.8
 #lxc.network.ipv4.gateway = 10.0.8.1
 
+# External mounts
+#lxc.mount.entry=/path/in/host/mount_point mount_point_in_container none bind 0 0
+
 CONFIG
 
 echo_green "done in $(($SECONDS - $START_TIME)) seconds..."

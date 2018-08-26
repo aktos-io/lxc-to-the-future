@@ -21,7 +21,7 @@ show_help(){
 
         --delete your-container-name  : Delete the container
         --keep-ssh-keys               : Do not regenerate SSH keys
-        --config-network              : Configure network after creation
+        --config                      : Open config file after creating the container
 
 HELP
     exit
@@ -37,7 +37,7 @@ new_keys=true
 NAME=
 SUBVOL=
 delete_vm=false
-config_network=false
+open_config=false
 
 # Parse command line arguments
 args=("$@")
@@ -66,8 +66,8 @@ while :; do
         --keep-ssh-keys) shift
             new_keys=false
             ;;
-        --config-network) shift
-            config_network=true
+        --config) shift
+            open_config=true
             ;;
         --delete) shift
             delete_vm=true
@@ -169,7 +169,7 @@ lxc.network.flags = up
 #lxc.network.ipv4.gateway = 10.0.8.1
 
 # External mounts
-#lxc.mount.entry=/path/in/host/mount_point mount_point_in_container none bind 0 0
+#lxc.mount.entry = /path/in/host/mount_point mount_point_in_container none bind 0 0
 
 CONFIG
 
@@ -198,4 +198,4 @@ to run GUI applications, make SSH with X forwarding:
 USAGE
 
 # Open configuration file
-[[ $config_network = true ]] && nano /var/lib/lxc/$NAME/config
+[[ $open_config = true ]] && nano /var/lib/lxc/$NAME/config

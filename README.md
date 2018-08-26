@@ -104,7 +104,9 @@ Then make ssh:
 
 Make ssh connection with X Forwarding:
 
-    ssh -X 10.0.8.8 freecad
+    ssh -XC 10.0.8.8 freecad
+    
+or use [x2go](./installing-x2go.md) for slower connections. 
 
 # Advantages
 

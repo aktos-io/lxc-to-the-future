@@ -114,6 +114,13 @@ The machine on `10.0.8.8` is the exact copy of my snapshot located at `/mnt/erik
 
 I can install/purge any software, run a database at that time, make any configuration changes and test them, run any of these machines forever nearly with  no cost in terms of CPU, RAM (thanks to LXC), disk and time (thanks to BTRFS) resources.
 
+# Convert another VM to LXC container 
+
+In order to convert any VM (or any kind of remote machine) to LXC container, 
+
+1. Use [dcs-tools](https://github.com/aktos-io/dcs-tools) to `make backup-root`
+2. Use `sync-root` as LXC container source 
+
 # Convert VM to Real Host
 
 If I want to use that VM as my primary OS, I just need to snapshot the `rootfs`:

@@ -153,7 +153,7 @@ If everything still goes well, clean the subvolumes:
 When your resources are not enough, you may want to convert your virtual machine into a new physical machine. To do so:
 
 1. Create an appropriate disk layout (`/boot`, `/root` over LVM over LUKS, for example) on a new disk 
-2. Setup the bootloader (see [create-bootable-backup.md](https://github.com/ceremcem/smith-sync/blob/master/create-bootable-backup.md))
+2. Setup the bootloader (see [create-bootable-backup.md](https://github.com/ceremcem/smith-sync/blob/master/doc/create-bootable-backup.md))
 3. Change network settings
 4. Attach your new disk to your new hardware
 5. Power on. 

@@ -41,3 +41,15 @@ sudo apt-get install x2goserver x2goserver-xsession
 ```
 sudo apt-get install x2goclient
 ```
+
+# Workarounds 
+
+### Host key verification failed ...
+
+```console 
+cd ~/.ssh
+mv known_hosts known_hosts.current
+# try to connect, accept the host key 
+cat known_hosts >> known_hosts.current
+mv known_hosts.current known_hosts 
+```

@@ -114,6 +114,13 @@ The machine on `10.0.8.8` is the exact copy of my snapshot located at `/mnt/erik
 
 I can install/purge any software, run a database at that time, make any configuration changes and test them, run any of these machines forever nearly with  no cost in terms of CPU, RAM (thanks to LXC), disk and time (thanks to BTRFS) resources.
 
+# Convert another VM to LXC container 
+
+In order to convert any VM (or any kind of remote machine) to LXC container, 
+
+1. Use [dcs-tools](https://github.com/aktos-io/dcs-tools) to `make backup-root`
+2. Use `sync-root` as LXC container source 
+
 # Convert VM to Real Host
 
 If I want to use that VM as my primary OS, I just need to snapshot the `rootfs`:
@@ -147,3 +154,13 @@ If everything still goes well, clean the subvolumes:
 
     btrfs sub delete /mnt/erik/rootfs_test
     btrfs sub delete /mnt/erik/rootfs.bak
+
+# Convert VM to New Physical Machine 
+
+When your resources are not enough, you may want to convert your virtual machine into a new physical machine. To do so:
+
+1. Create an appropriate disk layout (`/boot`, `/root` over LVM over LUKS, for example) on a new disk 
+2. Setup the bootloader (see [create-bootable-backup.md](https://github.com/ceremcem/smith-sync/blob/master/doc/create-bootable-backup.md))
+3. Change network settings
+4. Attach your new disk to your new hardware
+5. Power on. 

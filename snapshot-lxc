@@ -102,10 +102,12 @@ if [[ $list_ip = true ]]; then
     [[ $(whoami) = "root" ]] || { sudo $0 "$@"; exit 0; }
     echo "List of used IP's:"
     echo "------------------"
-    for vm_conf in `ls /var/lib/lxc/*/config`; do
+    set +e
+    for vm_conf in /var/lib/lxc/*/config; do
+        [[ -f $vm_conf ]] || continue
         vm_name=$(basename $(dirname $vm_conf))
-	ip=$(cat $vm_conf | egrep "^lxc\.network\.ipv4\s*=" | cut -d "=" -f 2)
-	echo -e "$vm_name\t\t: $ip"
+    	ip=$(cat $vm_conf | egrep "^lxc\.network\.ipv4\s*=" | cut -d "=" -f 2)
+    	echo -e "$vm_name\t\t: $ip"
     done
     exit 0
 fi

@@ -22,6 +22,7 @@ show_help(){
         --delete your-container-name  : Delete the container
         --keep-ssh-keys               : Do not regenerate SSH keys
         --config                      : Open config file after creating the container
+	--list-ip		      : List currently assigned IP's
 
 HELP
     exit
@@ -33,13 +34,16 @@ die(){
     exit 1
 }
 
+# Parse command line arguments
+# ---------------------------
+# Initialize parameters
 new_keys=true
 NAME=
 SUBVOL=
 delete_vm=false
 open_config=false
-
-# Parse command line arguments
+list_ip=false
+# ---------------------------
 args=("$@")
 _count=1
 while :; do
@@ -69,6 +73,9 @@ while :; do
         --config) shift
             open_config=true
             ;;
+        --list-ip) shift
+            list_ip=true
+            ;;
         --delete) shift
             delete_vm=true
             if [[ ! -z ${1:-} ]]; then
@@ -91,6 +98,19 @@ while :; do
 done; set -- "${args[@]}"
 # use $_arg1 in place of $1, $_arg2 in place of $2 and so on, "$@" is intact
 
+if [[ $list_ip = true ]]; then
+    [[ $(whoami) = "root" ]] || { sudo $0 "$@"; exit 0; }
+    echo "List of used IP's:"
+    echo "------------------"
+    for vm_conf in `ls /var/lib/lxc/*/config`; do
+        vm_name=$(basename $(dirname $vm_conf))
+	ip=$(cat $vm_conf | egrep "^lxc\.network\.ipv4\s*=" | cut -d "=" -f 2)
+	echo -e "$vm_name\t\t: $ip"
+    done
+    exit 0
+fi
+
+
 # Check parameters
 [[ -z $NAME ]] && die "Name of VM is required."
 [[ $delete_vm = false ]] && [[ -z $SUBVOL ]] && die "Source BTRFS subvolume is required"
@@ -101,7 +121,7 @@ done; set -- "${args[@]}"
 GUEST_ROOT="/var/lib/lxc/$NAME/rootfs"
 
 if [[ $delete_vm = true ]]; then
-	read -p "Press enter to stop and delete LXC container: $NAME"
+    read -p "Press enter to stop and delete LXC container: $NAME"
     set +e
     lxc-stop -n $NAME
 	btrfs sub delete $GUEST_ROOT

@@ -22,7 +22,7 @@ show_help(){
         --delete your-container-name  : Delete the container
         --keep-ssh-keys               : Do not regenerate SSH keys
         --config                      : Open config file after creating the container
-	--list-ip		      : List currently assigned IP's
+	    --list		                  : List currently assigned IP's
 
 HELP
     exit
@@ -42,7 +42,7 @@ NAME=
 SUBVOL=
 delete_vm=false
 open_config=false
-list_ip=false
+list=false
 # ---------------------------
 args=("$@")
 _count=1
@@ -73,8 +73,8 @@ while :; do
         --config) shift
             open_config=true
             ;;
-        --list-ip) shift
-            list_ip=true
+        --list) shift
+            list=true
             ;;
         --delete) shift
             delete_vm=true
@@ -98,9 +98,9 @@ while :; do
 done; set -- "${args[@]}"
 # use $_arg1 in place of $1, $_arg2 in place of $2 and so on, "$@" is intact
 
-if [[ $list_ip = true ]]; then
+if [[ $list = true ]]; then
     [[ $(whoami) = "root" ]] || { sudo $0 "$@"; exit 0; }
-    echo "List of used IP's:"
+    echo "List of containers:"
     echo "------------------"
     set +e
     for vm_conf in /var/lib/lxc/*/config; do

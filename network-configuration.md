@@ -61,9 +61,7 @@ Make sure that this script is executable:
 chmod +x /etc/network/lxc-nat-bridge-up.sh
 ```
 
-4. For VMs that is the clone of Host itself 
-
-**IMPORTANT**: If you clone host machine itself (with `snapshot-lxc / my-vm` command) you should remove any LXC specific entry from `GUEST_ROOT/etc/network/interfaces` file, like `lxc-bridge` entry. 
+4. Apply this step only for VMs which are the clone of the Host itself: If you clone host machine itself (with `snapshot-lxc / my-vm` command) you should remove any LXC specific entry from `GUEST_ROOT/etc/network/interfaces` file, like `lxc-bridge` entry. 
 
 
 5. Restart networking: 

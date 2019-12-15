@@ -5,6 +5,23 @@ safe_source () { [[ ! -z ${1:-} ]] && source $1; _dir="$(cd "$(dirname "${BASH_S
 
 safe_source $_sdir/dcs-tools/aktos-bash-lib/all.sh
 
+rm_folder(){
+	if is_btrfs $1; then
+		btrfs sub del $1
+	else
+		rm -r $1
+	fi
+}
+
+cp_folder(){
+	if is_btrfs $1 && is_btrfs $2; then
+		btrfs sub snap $1 $2
+	else
+		cp -al $1 $2
+	fi
+}
+
+
 # show help
 show_help(){
     cat <<HELP
@@ -22,7 +39,7 @@ show_help(){
         --delete your-container-name  : Delete the container
         --keep-ssh-keys               : Do not regenerate SSH keys
         --config                      : Open config file after creating the container
-	    --list		                  : List currently assigned IP's
+        --list	                      : List currently assigned IP's
 
 HELP
     exit
@@ -115,10 +132,11 @@ fi
 
 # Check parameters
 [[ -z $NAME ]] && die "Name of VM is required."
-[[ $delete_vm = false ]] && [[ -z $SUBVOL ]] && die "Source BTRFS subvolume is required"
+[[ $delete_vm = false ]] && [[ -z $SUBVOL ]] && die "Source directory (rootfs) is required"
 
 # All checks are done, run as root.
 [[ $(whoami) = "root" ]] || { sudo $0 "$@"; exit 0; }
+
 
 GUEST_ROOT="/var/lib/lxc/$NAME/rootfs"
 
@@ -126,7 +144,7 @@ if [[ $delete_vm = true ]]; then
     read -p "Press enter to stop and delete LXC container: $NAME"
     set +e
     lxc-stop -n $NAME
-	btrfs sub delete $GUEST_ROOT
+	rm_folder $GUEST_ROOT
 	rm -r $(dirname $GUEST_ROOT)
     echo_green "Removed $NAME"
 	exit
@@ -138,7 +156,7 @@ echo "creating the container directory: $NAME"
 mkdir $(dirname $GUEST_ROOT)
 
 echo "creating a writable snapshot of given subvolume"
-btrfs sub snap $SUBVOL $GUEST_ROOT
+cp_folder $SUBVOL $GUEST_ROOT
 
 _param=
 [[ $new_keys = false ]] && _param="--skip-ssh-keys"

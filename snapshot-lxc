@@ -146,9 +146,11 @@ GUEST_ROOT="/var/lib/lxc/$NAME/rootfs"
 if [[ $delete_vm = true ]]; then
     read -p "Press enter to stop and delete LXC container: $NAME"
     set +e
-    lxc-stop -n $NAME
-	rm_folder $GUEST_ROOT
-	rm -r $(dirname $GUEST_ROOT)
+    if [[ $(lxc-info -n $NAME | awk '$1 ~ /State/ {print $2}') == "RUNNING" ]]; then
+        lxc-stop -n $NAME
+    fi
+    rm_folder $GUEST_ROOT
+    rm -r $(dirname $GUEST_ROOT)
     echo_green "Removed $NAME"
 	exit
 fi
@@ -183,35 +185,71 @@ awk '/lxc-bridge/ {do_print=0}
 
 
 echo "creating the config file"
-cat <<CONFIG > $(dirname $GUEST_ROOT)/config
-# Template used to create this container: /usr/share/lxc/templates/lxc-download
-# Parameters passed to the template:
-# Template script checksum (SHA-1): 740c51206e35463362b735e68b867876048a8baf
-# For additional config options, please look at lxc.container.conf(5)
+lxc_major=$(lxc-ls --version | cut -d. -f1)
 
-# Uncomment the following line to support nesting containers:
-#lxc.include = /usr/share/lxc/config/nesting.conf
-# (Be aware this has security implications)
+if [[ "$lxc_major" == "2" ]]; then
+	cat <<- CONFIG2 > $(dirname $GUEST_ROOT)/config
 
-# Distribution configuration
-lxc.include = /usr/share/lxc/config/debian.common.conf
-lxc.arch = $(uname -m)
+	# Template used to create this container: /usr/share/lxc/templates/lxc-download
+	# Parameters passed to the template:
+	# Template script checksum (SHA-1): 740c51206e35463362b735e68b867876048a8baf
+	# For additional config options, please look at lxc.container.conf(5)
+	# Uncomment the following line to support nesting containers:
+	#lxc.include = /usr/share/lxc/config/nesting.conf
+	# (Be aware this has security implications)
+	# Distribution configuration
+	lxc.include = /usr/share/lxc/config/debian.common.conf
+	lxc.arch = $(uname -m)
 
-# Container specific configuration
-lxc.rootfs.path = /var/lib/lxc/$NAME/rootfs
-lxc.uts.name = $NAME
+	# Container specific configuration
+	lxc.rootfs = /var/lib/lxc/$NAME/rootfs
+	lxc.rootfs.backend = dir
+	lxc.utsname = $NAME
 
-# Network configuration
-lxc.net.0.type = veth
-lxc.net.0.link = lxc-bridge
-lxc.net.0.flags = up
-#lxc.net.0.ipv4.gateway = 10.0.8.1
-#lxc.net.0.ipv4.address = 10.0.8.8
+	# Network configuration
+	lxc.network.type = veth
+	lxc.network.link = lxc-bridge
+	lxc.network.flags = up
+	#lxc.network.ipv4.gateway = 10.0.8.1
+	#lxc.network.ipv4 = 10.0.8.8
 
-# External mounts
-#lxc.mount.entry = /path/to/host/folder     path/to/folder/in/container     none    bind    0 0
+	# External mounts
+	#lxc.mount.entry = /path/to/host/folder     path/to/folder/in/container     none    bind    0 0
+CONFIG2
+elif [[ "$lxc_major" == "3" ]]; then
+	cat <<- CONFIG3 > $(dirname $GUEST_ROOT)/config
+	# Template used to create this container: /usr/share/lxc/templates/lxc-download
+	# Parameters passed to the template:
+	# Template script checksum (SHA-1): 740c51206e35463362b735e68b867876048a8baf
+	# For additional config options, please look at lxc.container.conf(5)
 
-CONFIG
+	# Uncomment the following line to support nesting containers:
+	#lxc.include = /usr/share/lxc/config/nesting.conf
+	# (Be aware this has security implications)
+
+	# Distribution configuration
+	lxc.include = /usr/share/lxc/config/debian.common.conf
+	lxc.arch = $(uname -m)
+
+	# Container specific configuration
+	lxc.rootfs.path = /var/lib/lxc/$NAME/rootfs
+	lxc.uts.name = $NAME
+
+	# Network configuration
+	lxc.net.0.type = veth
+	lxc.net.0.link = lxc-bridge
+	lxc.net.0.flags = up
+	#lxc.net.0.ipv4.gateway = 10.0.8.1
+	#lxc.net.0.ipv4.address = 10.0.8.8
+
+	# External mounts
+	#lxc.mount.entry = /path/to/host/folder     path/to/folder/in/container     none    bind    0 0
+
+CONFIG3
+else
+	echo_red "Unknown lxc version: $lxc_major"
+	echo_red "No configuration file is generated."
+fi
 
 echo_green "done in $(($SECONDS - $START_TIME)) seconds..."
 

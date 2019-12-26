@@ -14,7 +14,9 @@ rm_folder(){
 }
 
 cp_folder(){
-	if is_btrfs $1 && is_btrfs $2; then
+	local target
+	[[ -d $2 ]] && target=$2 || target=$(dirname $2)
+	if is_btrfs $1 && is_btrfs $target; then
 		btrfs sub snap $1 $2
 	else
 		cp -al $1 $2
@@ -139,6 +141,8 @@ fi
 
 if ! is_btrfs /var/lib/lxc; then
     echo_info "This is a non-BTRFS file system."
+else
+    echo_info "BTRFS file system"
 fi
 
 GUEST_ROOT="/var/lib/lxc/$NAME/rootfs"
@@ -158,7 +162,7 @@ fi
 START_TIME=$SECONDS
 
 echo "creating the container directory: $NAME"
-mkdir $(dirname $GUEST_ROOT)
+mkdir -p $(dirname $GUEST_ROOT)
 
 echo "creating a writable snapshot of given subvolume"
 cp_folder $SUBVOL $GUEST_ROOT

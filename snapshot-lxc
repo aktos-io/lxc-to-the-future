@@ -175,9 +175,13 @@ $_sdir/dcs-tools/give-new-id \
     --root-dir $GUEST_ROOT \
     $_param
 
-echo "emptying the /etc/fstab file"
-mv $GUEST_ROOT/etc/fstab $GUEST_ROOT/etc/fstab.real
-touch $GUEST_ROOT/etc/fstab
+if [[ -f $GUEST_ROOT/etc/fstab ]]; then
+    echo "emptying the /etc/fstab file"
+    mv $GUEST_ROOT/etc/fstab $GUEST_ROOT/etc/fstab.real
+    touch $GUEST_ROOT/etc/fstab
+else
+    echo "No /etc/fstab file found, skipping removal."
+fi
 
 echo "remove the LXC specific entry from GUEST/etc/network/interfaces file"
 IFACE_FILE=$GUEST_ROOT/etc/network/interfaces

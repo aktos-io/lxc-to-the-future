@@ -108,6 +108,10 @@ Make ssh connection with X Forwarding:
     
 or use [x2go](./installing-x2go.md) for slower connections. 
 
+# Creating rootfs programmatically
+
+Use [ceremcem/multistrap-example](https://github.com/ceremcem/multistrap-example) to create custom rootfs programmatically.
+
 # Advantages
 
 The machine on `10.0.8.8` is the exact copy of my snapshot located at `/mnt/erik/snapshots/rootfs/rootfs.20170429T2001/`

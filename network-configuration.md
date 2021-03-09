@@ -2,10 +2,10 @@
 
 There are 2 types of network connection: 
 
-1. NAT configuration: Container will be behind a NAT firewall
-2. Bridge configuration: Container will be able to directly access host network
+1. NAT configuration: Container will be behind a NAT firewall. Easier to maintain.
+2. Bridge configuration: Container will be able to directly access host network.
 
-# 1. Setup NAT Connection
+# 1. NAT Configuration
 
 > Container will have the IP: `10.0.8.8` and its gateway will be: `10.0.8.1`
 
@@ -34,31 +34,43 @@ iface lxc-bridge inet static
 
 ```bash
 #!/bin/sh
+
 # This is the address we assigned to our bridge in /etc/network/interfaces
 braddr=10.0.8.1
+iface=eth0
 
-# Make sure that the IP forwarding is enabled 
+# Make sure that the IP forwarding is enabled
 echo 1 > /proc/sys/net/ipv4/ip_forward
 
-# Cleanup the iptables (Warning: this may prevent other scripts to add their rules)
+# Cleanup the iptables
+echo "Cleaning up iptables..."
 iptables -F
 iptables -F -t nat
 
-iptables -A FORWARD -i lxc-bridge -s ${braddr}/24 -m conntrack --ctstate NEW -j ACCEPT
+echo "Adding LXC rules"
+iptables -A FORWARD -i lxc-bridge -s ${braddr}/24 -m conntrack --ctstate NEW -jACCEPT
 iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-iptables -A POSTROUTING -t nat -j MASQUERADE 
-## Now you should be able to connect `10.0.8.8:443` by connecting `HOST_IP:443`. 
+iptables -A POSTROUTING -t nat -j MASQUERADE
 
-## if port forwarding is desired, uncomment the following lines:
-#iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j DNAT --to 10.0.8.8:80
-#iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j DNAT --to 10.0.8.8:443
+# Port forwarding, optional.
+fwd(){
+        local src="$1"
+        local tgt="$3"
+        echo "...forwarding $src to $tgt"
+        iptables -t nat -A PREROUTING -i $iface -p tcp --dport $src -j DNAT --to $tgt
+        iptables -t nat -A OUTPUT -o lo -d 127.0.0.1 -p tcp --dport $src -j DNAT  --to-destination $tgt
+}
+
+
+# couchdb
+#fwd 5984 to 10.0.8.87:5984
 
 ```
 
 Make sure that this script is executable:
 
 ```bash
-chmod +x /etc/network/lxc-nat-bridge-up.sh
+chmod +x /etc/network/lxc-nat-setup.sh
 ```
 
 4. Apply this step only for VMs which are the clone of the Host itself: If you clone host machine itself (with `snapshot-lxc / my-vm` command) you should remove any LXC specific entry from `GUEST_ROOT/etc/network/interfaces` file, like `lxc-bridge` entry. 
@@ -72,9 +84,9 @@ chmod +x /etc/network/lxc-nat-bridge-up.sh
 You should `ping google.com` within the container. (if something goes wrong, try to restart the guest vm)
 
 
-# 2. Setup Bridge Connection
+# 2. Bridge Configuration
 
-## Bridge with wired interface
+### Bridge with wired interface
 
 1. Edit `/etc/network/interfaces`:
 
@@ -99,27 +111,26 @@ iface lxc-bridge inet dhcp
 your-guest# dhclient eth0
 ```
 
-## Bridge with wireless interface 
+### Bridge with wireless interface 
 
 TODO...
 
 (see https://it-offshore.co.uk/linux/debian/60-debian-bridging-wireless-lxc-host-bridge)
 
-# Tests 
+# Testing
 
-Make sure that these settings won't break some functions so you can:
+Make sure that these settings won't break some functions. After above settings, perform the 
+following tests:
 
-* Connect any wireless hotspot, see your guest has internet access 
+* Connect any wireless hotspot, verify that your guest has internet access.
 
-* Connect any wired network, see your guest has internet access 
+* Connect a wired network, verify that your guest has internet access.
 
 * Test connection between host and the guest: 
 
   * Create a server on host: `nc -l -p 6655`
   * Connect to host from guest: `echo "hello" | nc 10.0.8.1 6655`
   * See `hello` string on host console.
-
-  ​
 
 
 

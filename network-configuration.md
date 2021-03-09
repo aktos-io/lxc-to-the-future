@@ -5,19 +5,21 @@ There are 2 types of network connection:
 1. NAT configuration: Container will be behind a NAT firewall. Easier to maintain.
 2. Bridge configuration: Container will be able to directly access host network.
 
-# 1. NAT Configuration
+# NAT Configuration
 
 > Container will have the IP: `10.0.8.8` and its gateway will be: `10.0.8.1`
 
-1. Add the followings to the `lxc.network.` section in `/var/lib/lxc/your-container/config`: 
+1. Add the following settings to the `/var/lib/lxc/your-container/config`: 
 
 ```
-lxc.network.ipv4 = 10.0.8.8
-lxc.network.ipv4.gateway = 10.0.8.1
+lxc.net.0.ipv4.address = 10.0.8.8
+lxc.net.0.ipv4.gateway = 10.0.8.1
+lxc.net.0.type = veth
+lxc.net.0.link = lxc-bridge
+lxc.net.0.flags = up
 ```
 
-2. Add `lxc-bridge` in `/etc/network/interfaces` file: 
-
+2. Declare `lxc-bridge` in `/etc/network/interfaces` file: 
 
 ```
 auto lxc-bridge
@@ -26,7 +28,7 @@ iface lxc-bridge inet static
     bridge_fd 0
     address 10.0.8.1
     netmask 255.255.0.0
-    up /etc/network/lxc-nat-setup.sh # or use iptables-persistent to make the rules persistent in the script
+    up /etc/network/lxc-nat-setup.sh 
 ```
 
 3. Create `/etc/network/lxc-nat-setup.sh` (unless you use `iptables-persistent` or something like that):
@@ -52,7 +54,8 @@ iptables -A FORWARD -i lxc-bridge -s ${braddr}/24 -m conntrack --ctstate NEW -jA
 iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 iptables -A POSTROUTING -t nat -j MASQUERADE
 
-# Port forwarding, optional.
+# Port forwarding (optional)
+# --------------------------
 fwd(){
         local src="$1"
         local tgt="$3"
@@ -60,7 +63,6 @@ fwd(){
         iptables -t nat -A PREROUTING -i $iface -p tcp --dport $src -j DNAT --to $tgt
         iptables -t nat -A OUTPUT -o lo -d 127.0.0.1 -p tcp --dport $src -j DNAT  --to-destination $tgt
 }
-
 
 # couchdb
 #fwd 5984 to 10.0.8.87:5984
@@ -84,7 +86,7 @@ chmod +x /etc/network/lxc-nat-setup.sh
 You should `ping google.com` within the container. (if something goes wrong, try to restart the guest vm)
 
 
-# 2. Bridge Configuration
+# Bridge Configuration
 
 ### Bridge with wired interface
 

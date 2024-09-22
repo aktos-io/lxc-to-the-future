@@ -129,7 +129,7 @@ if [[ $list = true ]]; then
         vm_name=$(basename $(dirname $vm_conf))
         if [[ "$lxc_major" == "2" ]]; then
         	ip=$(cat $vm_conf | egrep "^lxc\.network\.ipv4\s*=" | cut -d "=" -f 2)
-        elif [[ "$lxc_major" == "3" ]]; then
+        elif [[ "$lxc_major" == "3" ]] || [[ "$lxc_major" == "4" ]]; then
         	ip=$(cat $vm_conf | egrep "^lxc\.net.*\.ipv4.address\s*=" | cut -d "=" -f 2)
         fi
     	echo -e "$vm_name\t\t: $ip"
@@ -229,7 +229,7 @@ if [[ "$lxc_major" == "2" ]]; then
 	# External mounts
 	#lxc.mount.entry = /path/to/host/folder     path/to/folder/in/container     none    bind    0 0
 CONFIG2
-elif [[ "$lxc_major" == "3" ]]; then
+elif [[ "$lxc_major" == "3" ]] || [[ "$lxc_major" == "4" ]]; then
 	cat <<- CONFIG3 > $(dirname $GUEST_ROOT)/config
 	# Template used to create this container: /usr/share/lxc/templates/lxc-download
 	# Parameters passed to the template:
@@ -262,6 +262,7 @@ CONFIG3
 else
 	echo_red "Unknown lxc version: $lxc_major"
 	echo_red "No configuration file is generated."
+    echo_yellow "See /etc/lxc/default.conf"
 fi
 
 echo_green "done in $(($SECONDS - $START_TIME)) seconds..."

@@ -36,9 +36,18 @@ cd lxc-to-the-future
 
 ```
 
-# Example Run
+# Creating a fresh rootfs programmatically
 
-I want to create a LXC VM from one of my snapshots:
+Use the following to create custom rootfs programmatically: 
+
+```
+./multistrap-helpers/create-rootfs.sh --subvolume multistrap-helpers/stable.config
+```
+
+
+# Creating an LXC Container from an existing rootfs
+
+If you want to create an LXC container from one of my snapshots:
 
 
 ```console
@@ -108,13 +117,6 @@ Make ssh connection with X Forwarding:
     
 or use [x2go](./installing-x2go.md) for slower connections. 
 
-# Creating a fresh rootfs programmatically
-
-Use the following to create custom rootfs programmatically: 
-
-```
-./multistrap-helpers/create-rootfs.sh --subvolume multistrap-helpers/stable.config
-```
 
 # Advantages
 

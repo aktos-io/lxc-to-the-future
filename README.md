@@ -41,7 +41,7 @@ cd lxc-to-the-future
 Use the following to create custom rootfs programmatically: 
 
 ```
-./multistrap-helpers/create-rootfs.sh --subvolume multistrap-helpers/stable.config
+./multistrap-helpers/create-rootfs.sh --use-subvolume multistrap-helpers/stable.config
 ```
 
 

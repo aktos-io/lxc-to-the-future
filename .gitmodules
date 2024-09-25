@@ -1,3 +1,6 @@
 [submodule "dcs-tools"]
 	path = dcs-tools
 	url = https://github.com/aktos-io/dcs-tools
+[submodule "multistrap-helpers"]
+	path = multistrap-helpers
+	url = https://github.com/ceremcem/multistrap-helpers

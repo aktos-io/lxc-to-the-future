@@ -108,9 +108,13 @@ Make ssh connection with X Forwarding:
     
 or use [x2go](./installing-x2go.md) for slower connections. 
 
-# Creating rootfs programmatically
+# Creating a fresh rootfs programmatically
 
-Use [ceremcem/multistrap-example](https://github.com/ceremcem/multistrap-example) to create custom rootfs programmatically.
+Use the following to create custom rootfs programmatically: 
+
+```
+./multistrap-helpers/create-rootfs.sh --subvolume multistrap-helpers/stable.config
+```
 
 # Advantages
 
